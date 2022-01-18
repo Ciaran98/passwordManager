@@ -14,7 +14,18 @@ def read_data(filename):
 	try:
 		with open(filename, 'r') as f:
 			data = json.load(f)
-			print(data["passworddata"][0])
+			for x in range(len(data["passworddata"])):
+				print("Platform: " + data["passworddata"][x]["platform"] + " Password: " + data["passworddata"][x]["password"])
+		f.close()
+	except:
+		print("An error has occured")
+
+
+def get_password(filename, index):
+	try:
+		with open(filename, 'r') as f:
+			data = json.load(f)
+			print("Platform: " + data["passworddata"][index]["platform"] + " Password: " + data["passworddata"][index]["password"])
 		f.close()
 	except:
 		print("An error has occured")
@@ -34,9 +45,9 @@ def write_data(new_data,filename):
 
 y = {
 	"platform" : "amazon",
-			"password" : "password1",
-			"hash" : "blank"
+	"password" : "password1",
+	"hash" : "blank"
 }
 
-read_data(file)
+#read_data(filepath)
 #write_data(y)
