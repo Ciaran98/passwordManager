@@ -1,4 +1,5 @@
 import json
+import hashlib
 filepath = "../pytestfolder/testalt.json"
 
 # Create a file to store passwords in if one does not already exist
@@ -20,7 +21,7 @@ def read_data(filename):
 	except:
 		print("An error has occured")
 
-
+# Get password at specified index
 def get_password(filename, index):
 	try:
 		with open(filename, 'r') as f:
@@ -42,12 +43,14 @@ def write_data(new_data,filename):
 	except:
 		print("An error has occured")
 
-
-y = {
-	"platform" : "amazon",
-	"password" : "password1",
-	"hash" : "blank"
-}
-
-#read_data(filepath)
-#write_data(y)
+# Function to write the usere data to a python dictionary object
+def return_data_input(platform,password,hashed):
+	try:
+		data = {
+			"platform" : platform,
+			"password" : password,
+			"hash" : hashed
+		}
+		return data
+	except:
+		print("An error has occured")
