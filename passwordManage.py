@@ -1,11 +1,12 @@
 import pm
-filepath = "../pytestfolder/testalt.json"
+filepath = "../pytestfolder/test.json"
 
+pm.create_file(filepath)
 
-pm.read_data(filepath)
+encryptedPassword = pm.get_password_from_index(filepath, 0)
 
-pm.get_password(filepath, 2)
+pm.decrypt_password(encryptedPassword)
 
-data = pm.return_data_input("howdily","doodily","hash")
+data = pm.prepare_input("email.com","amazon","hotdogsandbalony")
 
-#pm.write_data(data,filepath)
+pm.write_data(data,filepath)
