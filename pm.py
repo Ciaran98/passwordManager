@@ -1,9 +1,12 @@
 import json
-import hashlib
+import argparse
 from cryptography.fernet import Fernet
-filepath = "../pytestfolder/testalt.json"
-cipherKey = b'xIyAn6_l4qZ2wE6lEpWy3JbyeYlZm-W-sYfyAc7zYx4='
 
+# Designated filepath for the JSON file for storing passwords
+filepath = "../pytestfolder/test.json"
+
+# Key for the Cipher used to decrypt the passwords, its only here temporarily
+cipherKey = b'xIyAn6_l4qZ2wE6lEpWy3JbyeYlZm-W-sYfyAc7zYx4='
 
 # Create a file to store passwords in if one does not already exist
 def create_file(filename):
@@ -81,4 +84,29 @@ def encrypt_password(password):
 def decrypt_password(encryptedPass):
 	cipher = Fernet(cipherKey)
 	decryptedPass = cipher.decrypt(encryptedPass)
-	print(decryptedPass)
+	print(decryptedPass.decode("utf-8"))
+
+
+# Get number of passwords stored in the json file
+def get_password_count(filename):
+	with open(filename, 'r') as f:
+		data = json.load(f)
+		print(len(data["passworddata"]))
+
+
+def perform_operation(operation):
+    match operation:
+        case 'list':
+        	get_data(filepath)
+        case 'new':
+        	create_file(filepath)
+        case 'write':
+        	email = input("Please enter your Email Address: ")
+        	password = input("Please enter your Password: ")
+        	platform = input("Please enter the platform associated with this account: ")
+        	data = prepare_input(email,platform,password)
+        	write_data(data,filepath)
+        case 'get':
+        	index = int(input("Which password do you want to retrieve: "))
+        	encryptedPassword = get_password_from_index(filepath, index)
+        	decrypt_password(encryptedPassword)

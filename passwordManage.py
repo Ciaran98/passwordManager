@@ -1,12 +1,11 @@
 import pm
-filepath = "../pytestfolder/test.json"
+import argparse
 
-pm.create_file(filepath)
+parser = argparse.ArgumentParser(description='Run the password management software')
 
-encryptedPassword = pm.get_password_from_index(filepath, 0)
+parser.add_argument('operation', type=str, help='Which operation should the application perform')
 
-pm.decrypt_password(encryptedPassword)
+args = parser.parse_args()
 
-data = pm.prepare_input("email.com","amazon","hotdogsandbalony")
+pm.perform_operation(args.operation)
 
-pm.write_data(data,filepath)
