@@ -96,15 +96,11 @@ def get_password_from_index(filename, index):
 		encryptedPass = bytes(data["passworddata"][index]["encrypted"],'UTF-8')
 	return encryptedPass
 
-
-
-# Function to search for password by platform
-def get_password_from_platform_name(filename, platform):
+def get_data_from_index(filename, index):
 	with open(filename, 'r') as f:
 		data = json.load(f)
-		for x in range(len(data["passworddata"])):
-			if platform == data["passworddata"][x]["platform"]:
-				print("Not sure if this will be used")
+	return data["passworddata"][index]
+
 
 
 
@@ -172,3 +168,6 @@ def perform_operation(operation):
 			encryptedPassword = get_password_from_index(docPath, index)
 			password = decrypt_password(encryptedPassword)
 			print(password)
+		case 'data':
+			index = int(input("Which password do you want to retrieve: "))
+			print(get_data_from_index(docPath,index))
