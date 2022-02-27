@@ -152,6 +152,14 @@ def get_password_count(filename):
 		return len(data["passworddata"])
 
 
+def delete_password(filename,index):
+	with open(filename, 'r') as f:
+		data = json.load(f)
+	del data['passworddata'][index]
+	with open(filename,'w') as w:
+		json.dump(data,w,indent=4)
+		
+
 # Match case statement for carrying out user designated operations
 def perform_operation(operation):
 	match operation:
