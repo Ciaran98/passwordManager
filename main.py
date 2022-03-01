@@ -32,6 +32,10 @@ class Ui_MainWindow(object):
 		self.deleteButton.setObjectName("deleteButton")
 		self.deleteButton.clicked.connect(self.delete)
 		self.deleteButton.move(175,5)
+		self.genNewKeyButton = QtWidgets.QPushButton(self.centralwidget)
+		self.genNewKeyButton.setObjectName("genNewKeyButton")
+		self.genNewKeyButton.clicked.connect(self.reset)
+		self.genNewKeyButton.move(250,5)
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.statusbar = QtWidgets.QStatusBar(MainWindow)
 		self.statusbar.setObjectName("statusbar")
@@ -46,7 +50,7 @@ class Ui_MainWindow(object):
 		self.tableWidget.setHorizontalHeaderLabels(["Email","Platform","Password"])
 		for x in range(pm.get_password_count(pm.get_filepath())):
 			data = pm.get_data_from_index(pm.get_filepath(), x)
-			dots = "•"*len(pm.decrypt_password(bytes(data['encrypted'],'UTF-8')))
+			dots = "•"*len(pm.decrypt_password(bytes(data['encrypted'],'UTF-8'),pm.read_ciph_key(pm.get_confpath())))
 			self.tableWidget.setItem(x,0, QTableWidgetItem(data['email']))
 			self.tableWidget.item(x,0).setFlags(QtCore.Qt.ItemIsEnabled)
 			self.tableWidget.setItem(x,1, QTableWidgetItem(data['platform']))
@@ -63,12 +67,15 @@ class Ui_MainWindow(object):
 		self.inputDialogButton.setText(_translate("MainWindow", "Add New Password"))
 		self.refreshButton.setText(_translate("Main Window", "Refresh"))
 		self.deleteButton.setText(_translate("Main Window", "Delete"))
+		self.genNewKeyButton.setText(_translate("Main Window", "Regen Key"))
 
+	def reset(self):
+		pm.reset_cipher_key()
 	def refresh(self):
 		self.tableWidget.setRowCount(pm.get_password_count(pm.get_filepath()))
 		for current_row in range(pm.get_password_count(pm.get_filepath())):
 			data = pm.get_data_from_index(pm.get_filepath(), current_row)
-			dots = "•"*len(pm.decrypt_password(bytes(data['encrypted'],'UTF-8')))
+			dots = "•"*len(pm.decrypt_password(bytes(data['encrypted'],'UTF-8'),pm.read_ciph_key(pm.get_confpath())))
 			self.tableWidget.setItem(current_row,0, QTableWidgetItem(data['email']))
 			self.tableWidget.item(current_row,0).setFlags(QtCore.Qt.ItemIsEnabled)
 			self.tableWidget.setItem(current_row,1, QTableWidgetItem(data['platform']))
@@ -99,7 +106,7 @@ class Ui_MainWindow(object):
 	# If the clicked item is a password, decrypt the password and show it for 2000 miliseconds, then call the function to rehide the password
 	def unhidePassword(self,clicked_col,clicked_row):
 		if clicked_col == 2:
-			decrypted_pass = pm.decrypt_password(pm.get_password_from_index(pm.get_filepath(),clicked_row))
+			decrypted_pass = pm.decrypt_password(pm.get_password_from_index(pm.get_filepath(),clicked_row),pm.read_ciph_key(pm.get_confpath()))
 			self.tableWidget.setItem(clicked_row,clicked_col,QTableWidgetItem(decrypted_pass))
 			self.tableWidget.item(clicked_row,clicked_col).setFlags(QtCore.Qt.ItemIsEnabled)
 			QTimer.singleShot(2000, lambda : self.rehidePassword(clicked_row,clicked_col,len(decrypted_pass)))
@@ -109,7 +116,7 @@ class Ui_Dialog(object):
 	# Function to write the user data into the JSON file
 	def buttonClick(self,email,password,platform):
 		filepath = pm.get_filepath()
-		data = pm.prepare_input(email,platform,password)
+		data = pm.prepare_input(email,platform,password,pm.read_ciph_key(pm.get_confpath()))
 		pm.write_data(data, filepath)
 		self.textEdit.clear()
 		self.textEdit_2.clear()

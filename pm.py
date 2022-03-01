@@ -1,5 +1,7 @@
+from fileinput import filename
 import json
 import os.path
+import tempfile
 from cryptography.fernet import Fernet
 
 # This portion of the code creates the necessary file for storing the encrypted passwords
@@ -29,10 +31,9 @@ def import_format(filename):
 
 
 # generate new cipher key, will only be used if there is no config file / cipher key already
-def gen_key_file(filename):
-	key = Fernet.generate_key()
+def gen_key_file(filename, ciph_key):
 	conf = {
-		"key" : key.decode('UTF-8')
+		"key" : ciph_key.decode('UTF-8')
 	}
 	with open(filename, "w") as confWrite:
 		json.dump(conf, confWrite)
@@ -50,6 +51,11 @@ def get_filepath():
 	filepath = R"C:\Users\$USERNAME\Documents\PMPro\PMStorage.json"
 	filepath = os.path.expandvars(filepath)
 	return filepath
+
+def get_confpath():
+	confpath = R"C:\Users\$USERNAME\Documents\PMPro\config.json"
+	confpath = os.path.expandvars(confpath)
+	return confpath
 
 	# This next portion determines where the users documents folder is located
 docPath = R"C:\Users\$USERNAME\Documents"
@@ -72,11 +78,11 @@ if not os.path.exists(docPath):
 
 if not os.path.exists(confPath):
 	create_file(confPath)
-	gen_key_file(confPath)
+	gen_key_file(confPath,Fernet.generate_key())
 
 
 # Initiates the cipherKey Variable that will be used in the encryption of your passwords
-cipherKey = read_ciph_key(confPath)
+#cipherKey = read_ciph_key(confPath)
 
 
 
@@ -84,8 +90,7 @@ cipherKey = read_ciph_key(confPath)
 def get_data(filename):
 	with open(filename, 'r') as f:
 		data = json.load(f)
-		for x in range(len(data["passworddata"])):
-			print("Platform: " + data["passworddata"][x]["platform"] + " Password: " + data["passworddata"][x]["encrypted"])
+		return data
 
 
 
@@ -118,8 +123,8 @@ def write_data(new_data,filename):
 # takes the password and encrypts it using the encrypt_password function,
 # decodes it from binary using the decode function,
 # and prepares the object for use in writing to a json file
-def prepare_input(email,platform,password):
-	encrypted = encrypt_password(password).decode('UTF-8')
+def prepare_input(email,platform,password,cipher_key):
+	encrypted = encrypt_password(password,cipher_key).decode('UTF-8')
 	data = {
 		"email" : email,
 		"platform" : platform,
@@ -130,8 +135,8 @@ def prepare_input(email,platform,password):
 
 
 # Encrypt the given password using the Cryptography Library
-def encrypt_password(password):
-	cipher = Fernet(cipherKey)
+def encrypt_password(password,cipher_key):
+	cipher = Fernet(cipher_key)
 	passwordBytes = bytes(password,'UTF-8')
 	encrypted = cipher.encrypt(passwordBytes)
 	return encrypted
@@ -139,9 +144,9 @@ def encrypt_password(password):
 
 
 # Decrypt the password using the cipher key
-def decrypt_password(encryptedPass):
-	cipher = Fernet(cipherKey)
-	decryptedPass = cipher.decrypt(encryptedPass)
+def decrypt_password(encrypted_pass,cipher_key):
+	cipher = Fernet(cipher_key)
+	decryptedPass = cipher.decrypt(encrypted_pass)
 	return decryptedPass.decode("utf-8")
 
 
@@ -151,6 +156,7 @@ def get_password_count(filename):
 		data = json.load(f)
 		return len(data["passworddata"])
 
+# Delete password at specified index
 
 def delete_password(filename,index):
 	with open(filename, 'r') as f:
@@ -159,23 +165,19 @@ def delete_password(filename,index):
 	with open(filename,'w') as w:
 		json.dump(data,w,indent=4)
 		
+# Reset the cipher key at will for security reasons
 
-# Match case statement for carrying out user designated operations
-def perform_operation(operation):
-	match operation:
-		case "list":
-			get_data(docPath)
-		case "write":
-			email = input("Please enter your Email Address: ")
-			password = input("Please enter your Password: ")
-			platform = input("Please enter the platform associated with this account: ")
-			data = prepare_input(email,platform,password)
-			write_data(data,docPath)
-		case 'get':
-			index = int(input("Which password do you want to retrieve: "))
-			encryptedPassword = get_password_from_index(docPath, index)
-			password = decrypt_password(encryptedPassword)
-			print(password)
-		case 'data':
-			index = int(input("Which password do you want to retrieve: "))
-			print(get_data_from_index(docPath,index))
+def reset_cipher_key():
+	old_key = read_ciph_key(get_confpath())
+	new_key = Fernet.generate_key()
+	with open(get_filepath(), 'r') as f:
+		data = json.load(f)
+	for current_pass in range(get_password_count(get_filepath())):
+		old_encrypted = data['passworddata'][current_pass]['encrypted']
+		old_encrypted = decrypt_password(bytes(old_encrypted,'UTF-8'),old_key)
+		new_encrypted = encrypt_password(old_encrypted,new_key)
+		data['passworddata'][current_pass]['encrypted'] = new_encrypted.decode('UTF-8')
+	with open(get_filepath(),'w') as w:
+		json.dump(data,w,indent=4)
+	gen_key_file(get_confpath(),new_key)
+	
